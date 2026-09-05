@@ -287,9 +287,9 @@
 
   /* numbered marker drawn beside each anchor — only used in the phone legend layout */
   .leads .marker{
-    font-family:var(--body);font-weight:400;font-size:10px;letter-spacing:.08em;
+    font-family:var(--body);font-weight:700;font-size:12.5px;letter-spacing:.05em;
     fill:var(--gold);opacity:0;paint-order:stroke;
-    stroke:rgba(7,5,3,.85);stroke-width:3px;stroke-linejoin:round;
+    stroke:rgba(7,5,3,.95);stroke-width:4.5px;stroke-linejoin:round;
   }
   .chip.tag .idx{display:none}
 
@@ -423,6 +423,7 @@
   var blinkEl = document.getElementById('blink');
   var washEl  = document.getElementById('wash');
   var railEl  = document.getElementById('rail');
+  var hdrEl   = document.querySelector('header');
 
   /* lock "MARS RESIDENCES" to the exact width of "ORO" */
   function fitLockup(){
@@ -490,8 +491,10 @@
           line.setAttribute('stroke', 'rgba(239,227,212,.8)');
           line.setAttribute('stroke-width', '1');
           dot = document.createElementNS(SVGNS, 'circle');
-          dot.setAttribute('r', '3');
-          dot.setAttribute('fill', '#EFE3D4');
+          dot.setAttribute('r', '4');
+          dot.setAttribute('fill', '#E3B072');
+          dot.setAttribute('stroke', 'rgba(7,5,3,.9)');
+          dot.setAttribute('stroke-width', '1.5');
           // the number that pairs a marker on the building with its legend row
           tag = document.createElementNS(SVGNS, 'text');
           tag.setAttribute('class', 'marker');
@@ -725,7 +728,11 @@
       var dw = img ? img.naturalWidth * k : sw, dh = img ? img.naturalHeight * k : sh;
       var ox = (sw - dw) * focusX, oy = (sh - dh) / 2;
       var narrow = sw < 820;
-      var LEG_X = 16, LEG_ROW = 38, LEG_TOP = Math.max(96, sh * .12);
+      // measured off the real header, so the legend clears the logo at any size
+      var LEG_X = 16, LEG_ROW = 38;
+      // rows are centred on their y, so add half a row to clear the header properly
+      var boxH = (list[0] && list[0].box) ? list[0].box.offsetHeight : 30;
+      var LEG_TOP = (hdrEl ? hdrEl.getBoundingClientRect().bottom : 88) + 22 + boxH / 2;
 
       for (var nj = 0; nj < list.length; nj++){
         var n = list[nj], def = n.def, o = 0;

@@ -321,10 +321,15 @@ export default function OroMarsExperience() {
     const narrow = sw < 820;
     const LEG_X = 16;
     const LEG_ROW = 38;
-    const LEG_TOP = Math.max(96, sh * 0.12);
 
     SECTIONS.forEach((sec, si) => {
       if (!sec.notes) return;
+      // rows are centred on their y, so add half a row to clear the header properly
+      const firstBox = noteBoxRefs.current[si]?.[0];
+      const boxH = firstBox ? firstBox.offsetHeight : 30;
+      const headerBottom = document.querySelector("header")?.getBoundingClientRect().bottom ?? 88;
+      const LEG_TOP = headerBottom + 22 + boxH / 2;
+
       sec.notes.forEach((def, nj) => {
         const box = noteBoxRefs.current[si]?.[nj];
         const line = noteLineRefs.current[si]?.[nj];
@@ -730,8 +735,10 @@ export default function OroMarsExperience() {
                       if (!noteDotRefs.current[si]) noteDotRefs.current[si] = [];
                       noteDotRefs.current[si][nj] = el;
                     }}
-                    r={3}
-                    fill="hsl(var(--oro-sand))"
+                    r={4}
+                    fill="hsl(var(--oro-gold))"
+                    stroke="hsl(var(--oro-ink)/.9)"
+                    strokeWidth={1.5}
                     style={{ opacity: 0 }}
                   />
                   {/* the number that pairs a marker on the building with its legend row */}
@@ -742,13 +749,13 @@ export default function OroMarsExperience() {
                     }}
                     fill="hsl(var(--oro-gold))"
                     stroke="hsl(var(--oro-ink)/.85)"
-                    strokeWidth={3}
+                    strokeWidth={4.5}
                     strokeLinejoin="round"
                     style={{
                       opacity: 0,
                       paintOrder: "stroke",
-                      font: "400 10px/1 Sansation, system-ui, sans-serif",
-                      letterSpacing: ".08em",
+                      font: "700 12.5px/1 Sansation, system-ui, sans-serif",
+                      letterSpacing: ".05em",
                     }}
                   >
                     {String(nj + 1).padStart(2, "0")}
