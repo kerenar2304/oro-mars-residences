@@ -330,14 +330,16 @@ export default function OroMarsExperience() {
       const headerBottom = document.querySelector("header")?.getBoundingClientRect().bottom ?? 88;
       const count = sec.notes.length;
       const bandTop = headerBottom + 16;
-      const bandBot = sh * 0.3;
+      const bandBot = sh * 0.42;
+      // rows may tighten to fit, but never closer than their own height plus a gap —
+      // overlapping labels are unreadable, whereas grazing the roofline is not
+      const minRow = boxH + 8;
       let LEG_ROW = 38;
-      let blockH = (count - 1) * LEG_ROW + boxH;
-      if (blockH > bandBot - bandTop) {
-        LEG_ROW = Math.max(28, (bandBot - bandTop - boxH) / Math.max(1, count - 1));
-        blockH = (count - 1) * LEG_ROW + boxH;
+      if ((count - 1) * LEG_ROW + boxH > bandBot - bandTop) {
+        LEG_ROW = Math.max(minRow, (bandBot - bandTop - boxH) / Math.max(1, count - 1));
       }
-      const LEG_TOP = bandTop + Math.max(0, (bandBot - bandTop - blockH) / 2) + boxH / 2;
+      // anchored under the logo rather than centred, so it stays clear of the building
+      const LEG_TOP = bandTop + boxH / 2;
 
       sec.notes.forEach((def, nj) => {
         const box = noteBoxRefs.current[si]?.[nj];

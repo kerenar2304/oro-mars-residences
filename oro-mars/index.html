@@ -740,14 +740,16 @@
       var LEG_X = 16;
       var boxH = (list[0] && list[0].box) ? list[0].box.offsetHeight : 30;
       var bandTop = (hdrEl ? hdrEl.getBoundingClientRect().bottom : 88) + 16;
-      var bandBot = sh * .30;
+      var bandBot = sh * .42;
+      // rows may tighten to fit, but never closer than their own height plus a gap —
+      // overlapping labels are unreadable, whereas grazing the roofline is not
+      var minRow = boxH + 8;
       var LEG_ROW = 38;
-      var blockH = (list.length - 1) * LEG_ROW + boxH;
-      if (blockH > bandBot - bandTop){
-        LEG_ROW = Math.max(28, (bandBot - bandTop - boxH) / Math.max(1, list.length - 1));
-        blockH = (list.length - 1) * LEG_ROW + boxH;
+      if ((list.length - 1) * LEG_ROW + boxH > bandBot - bandTop){
+        LEG_ROW = Math.max(minRow, (bandBot - bandTop - boxH) / Math.max(1, list.length - 1));
       }
-      var LEG_TOP = bandTop + Math.max(0, (bandBot - bandTop - blockH) / 2) + boxH / 2;
+      // anchored under the logo rather than centred, so it stays clear of the building
+      var LEG_TOP = bandTop + boxH / 2;
 
       for (var nj = 0; nj < list.length; nj++){
         var n = list[nj], def = n.def, o = 0;
