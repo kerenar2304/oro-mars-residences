@@ -19,10 +19,10 @@ const CDN = "https://cdn.jsdelivr.net/gh/kerenar2304/oro-mars-residences@main/or
  *   @import url('https://fonts.googleapis.com/css2?family=Bruno+Ace&display=swap');
  *
  *   :root {
- *     --oro-ink:      12 39% 2%;      /* #070503 */
- *     --oro-sand:     29 46% 88%;     /* #EFE3D4 */
- *     --oro-terra:    21 51% 51%;     /* #C4693F */
- *     --oro-gold:     31 66% 67%;     /* #E3B072 */
+ *     --oro-ink:      12 39% 2%;      · #070503
+ *     --oro-sand:     29 46% 88%;     · #EFE3D4
+ *     --oro-terra:    21 51% 51%;     · #C4693F
+ *     --oro-gold:     31 66% 67%;     · #E3B072
  *   }
  *
  * tailwind.config.ts → theme.extend:
