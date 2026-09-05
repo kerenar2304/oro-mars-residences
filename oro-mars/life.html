@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Life on Mars — ORO Mars Residences</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bruno+Ace&display=swap" rel="stylesheet">
+<style>
+  @font-face{font-family:'Sansation';src:url('public/fonts/Sansation-Light.ttf') format('truetype');font-weight:300;font-display:swap}
+  @font-face{font-family:'Sansation';src:url('public/fonts/Sansation-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+  @font-face{font-family:'Sansation';src:url('public/fonts/Sansation-Bold.ttf') format('truetype');font-weight:700;font-display:swap}
+
+  :root{
+    --ink:#070503;
+    --ink-2:#0D0906;
+    --sand:#EFE3D4;
+    --sand-dim:rgba(239,227,212,.62);
+    --terra:#C4693F;
+    --gold:#E3B072;
+    --rule:rgba(239,227,212,.14);
+    --display:'Bruno Ace','Sansation',system-ui,sans-serif;
+    --body:'Sansation',system-ui,-apple-system,sans-serif;
+    --pad:clamp(20px,3.4vw,48px);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--ink);color:var(--sand);font-family:var(--body);font-weight:300;
+    -webkit-font-smoothing:antialiased;overflow-x:hidden;
+  }
+  ::selection{background:var(--terra);color:#fff}
+  img{display:block;max-width:100%}
+  a{color:inherit}
+
+  #grain{
+    position:fixed;inset:0;z-index:12;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>");
+    background-size:160px 160px;
+  }
+
+  /* ---------- header / menu ---------- */
+  header{
+    position:fixed;top:0;left:0;right:0;z-index:60;
+    display:flex;align-items:center;justify-content:space-between;
+    padding:clamp(18px,2.6vw,34px) var(--pad);
+    transition:background .5s ease, backdrop-filter .5s ease;
+  }
+  header.stuck{background:rgba(7,5,3,.7);backdrop-filter:blur(14px)}
+  .lockup{display:flex;flex-direction:column;align-items:flex-start;gap:.42em;line-height:1;text-decoration:none}
+  .lockup .oro{display:block;font-family:var(--display);font-size:clamp(24px,2.6vw,38px);letter-spacing:.02em}
+  .lockup .sub{
+    display:block;white-space:nowrap;transform-origin:left center;
+    font-family:var(--body);font-weight:300;font-size:clamp(8px,.78vw,11px);
+    letter-spacing:.12em;color:var(--sand-dim);
+  }
+  .burger{
+    -webkit-appearance:none;appearance:none;background:transparent;border:0;cursor:pointer;
+    width:46px;height:46px;display:grid;place-content:center;gap:7px;color:var(--sand);
+  }
+  .burger span{display:block;width:26px;height:1px;background:currentColor;transition:transform .45s cubic-bezier(.2,.8,.2,1),opacity .25s}
+  body.menu-open .burger span:nth-child(1){transform:translateY(4px) rotate(45deg)}
+  body.menu-open .burger span:nth-child(2){opacity:0}
+  body.menu-open .burger span:nth-child(3){transform:translateY(-4px) rotate(-45deg)}
+
+  #menu{
+    position:fixed;inset:0;z-index:50;background:rgba(7,5,3,.94);backdrop-filter:blur(22px);
+    display:grid;align-content:center;padding:clamp(88px,12vh,140px) clamp(24px,7vw,120px);
+    opacity:0;visibility:hidden;transition:opacity .5s ease,visibility .5s;
+  }
+  body.menu-open #menu{opacity:1;visibility:visible}
+  #menu nav{display:flex;flex-direction:column}
+  #menu a{
+    display:flex;align-items:baseline;gap:clamp(14px,2vw,30px);text-decoration:none;
+    padding:clamp(10px,1.4vh,18px) 0;border-bottom:1px solid rgba(239,227,212,.08);
+    font-family:var(--display);font-size:clamp(19px,3.2vw,44px);line-height:1.1;
+    opacity:.55;transition:opacity .35s ease,padding-left .35s cubic-bezier(.2,.8,.2,1),color .35s;
+  }
+  #menu a:hover,#menu a[aria-current]{opacity:1;padding-left:14px;color:var(--gold)}
+  #menu a em{font-family:var(--body);font-style:normal;font-weight:300;font-size:10px;letter-spacing:.3em;color:rgba(239,227,212,.35)}
+  .menu-foot{display:flex;flex-wrap:wrap;gap:clamp(24px,4vw,64px);margin-top:clamp(28px,5vh,60px);font-size:11px;letter-spacing:.16em;color:var(--sand-dim)}
+
+  /* ---------- reveal ---------- */
+  .rv > *{
+    opacity:0;transform:translateY(18px);
+    transition:opacity .9s ease, transform 1s cubic-bezier(.16,.84,.24,1);
+  }
+  .rv > *:nth-child(1){transition-delay:.04s}
+  .rv > *:nth-child(2){transition-delay:.14s}
+  .rv > *:nth-child(3){transition-delay:.24s}
+  .rv > *:nth-child(4){transition-delay:.34s}
+  .rv > *:nth-child(5){transition-delay:.44s}
+  .rv.in > *{opacity:1;transform:none}
+
+  .eyebrow{
+    position:relative;font-size:9px;letter-spacing:.4em;text-transform:uppercase;
+    color:var(--gold);padding-left:34px;
+  }
+  .eyebrow::before{
+    content:'';position:absolute;left:0;top:50%;width:24px;height:1px;background:var(--gold);
+    transform-origin:left;transform:scaleX(0);transition:transform 1s cubic-bezier(.16,.84,.24,1) .15s;
+  }
+  .rv.in .eyebrow::before{transform:scaleX(1)}
+
+  /* ---------- hero ---------- */
+  .hero{position:relative;min-height:min(92vh,940px);display:flex;align-items:flex-end;overflow:hidden}
+  .hero img{
+    position:absolute;inset:0;width:100%;height:100%;object-fit:cover;
+    transform:scale(1.06);transition:transform 2.6s cubic-bezier(.16,.84,.24,1);
+  }
+  .hero.in img{transform:scale(1)}
+  .hero::after{
+    content:'';position:absolute;inset:0;
+    background:
+      linear-gradient(to top, rgba(7,5,3,.94) 0%, rgba(7,5,3,.80) 14%, rgba(7,5,3,.58) 30%,
+        rgba(7,5,3,.34) 46%, rgba(7,5,3,.16) 62%, rgba(7,5,3,.05) 78%, rgba(7,5,3,0) 100%),
+      linear-gradient(to right, rgba(7,5,3,.55) 0%, rgba(7,5,3,.32) 30%, rgba(7,5,3,.1) 60%, rgba(7,5,3,0) 100%);
+  }
+  .hero .inner{position:relative;z-index:2;width:100%;padding:0 var(--pad) clamp(56px,8vh,96px)}
+  h1{
+    font-family:var(--display);font-weight:400;
+    font-size:clamp(38px,6.4vw,104px);line-height:1;margin-top:clamp(18px,2vw,28px);
+  }
+  .lede{
+    margin-top:clamp(18px,2vw,28px);max-width:52ch;
+    font-size:clamp(15px,1.15vw,19px);line-height:1.65;color:var(--sand-dim);
+  }
+
+  /* ---------- the sol strip ---------- */
+  .sol{padding:clamp(64px,10vh,130px) var(--pad);border-top:1px solid var(--rule)}
+  .sol h2, .band h2, .compare h3{
+    font-family:var(--display);font-weight:400;
+    font-size:clamp(24px,2.8vw,44px);line-height:1.1;margin-top:clamp(14px,1.6vw,20px);
+  }
+  .sol p.intro{
+    margin-top:clamp(16px,1.8vw,24px);max-width:56ch;
+    font-size:clamp(13.5px,1.02vw,16px);line-height:1.75;color:var(--sand-dim);
+  }
+  .timeline{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:0;margin-top:clamp(34px,4.4vw,60px);border-top:1px solid var(--rule);
+  }
+  .beat{padding:clamp(22px,2.6vw,34px) clamp(16px,1.8vw,26px) clamp(26px,3vw,40px) 0}
+  .beat + .beat{border-left:1px solid var(--rule);padding-left:clamp(16px,1.8vw,26px)}
+  .beat time{
+    display:block;font-family:var(--display);font-size:clamp(15px,1.4vw,21px);color:var(--gold);
+  }
+  .beat b{
+    display:block;margin-top:.9em;font-family:var(--body);font-weight:400;
+    font-size:clamp(13px,1.02vw,15.5px);letter-spacing:.02em;
+  }
+  .beat span{
+    display:block;margin-top:.55em;font-size:clamp(12px,.92vw,14px);line-height:1.6;color:var(--sand-dim);
+  }
+
+  /* ---------- alternating bands ---------- */
+  .band{
+    display:grid;grid-template-columns:1.15fr .85fr;align-items:center;
+    gap:clamp(28px,4.6vw,80px);
+    padding:clamp(44px,7vh,96px) var(--pad);
+    border-top:1px solid var(--rule);
+  }
+  .band:nth-of-type(even) .shot{order:2}
+  .shot{position:relative;overflow:hidden;border-radius:2px;aspect-ratio:16/9;background:var(--ink-2)}
+  .shot img{
+    width:100%;height:100%;object-fit:cover;
+    transform:scale(1.08);transition:transform 1.6s cubic-bezier(.16,.84,.24,1);
+  }
+  .band.in .shot img{transform:scale(1)}
+  .shot::after{
+    content:'';position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(to top, rgba(7,5,3,.4), rgba(7,5,3,0) 45%);
+    box-shadow:inset 0 0 0 1px rgba(239,227,212,.09);
+  }
+  .band p.copy{
+    margin-top:clamp(14px,1.6vw,20px);max-width:46ch;
+    font-size:clamp(13.5px,1.02vw,16px);line-height:1.75;color:var(--sand-dim);
+  }
+  .facts{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:clamp(14px,1.6vw,22px) clamp(20px,2.6vw,40px);
+    margin-top:clamp(22px,2.6vw,34px);padding-top:clamp(18px,2vw,26px);
+    border-top:1px solid var(--rule);max-width:520px;
+  }
+  .facts div{display:flex;flex-direction:column;gap:7px}
+  .facts dt{font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:rgba(239,227,212,.42)}
+  .facts dd{font-family:var(--display);font-size:clamp(14px,1.25vw,19px)}
+
+  /* ---------- amenity grid ---------- */
+  .commons{padding:clamp(64px,10vh,130px) var(--pad);border-top:1px solid var(--rule)}
+  .grid{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+    gap:1px;margin-top:clamp(30px,4vw,52px);
+    background:var(--rule);border:1px solid var(--rule);
+  }
+  .cell{background:var(--ink);padding:clamp(24px,2.8vw,38px);transition:background .45s ease}
+  .cell:hover{background:#0C0805}
+  .cell i{
+    display:block;width:5px;height:5px;border-radius:50%;background:var(--gold);
+    box-shadow:0 0 0 4px rgba(227,176,114,.14);
+  }
+  .cell b{
+    display:block;margin-top:clamp(18px,2vw,26px);
+    font-family:var(--display);font-weight:400;font-size:clamp(15px,1.35vw,21px);
+  }
+  .cell span{
+    display:block;margin-top:.8em;font-size:clamp(12.5px,.96vw,14.5px);line-height:1.65;color:var(--sand-dim);
+  }
+
+  /* ---------- getting there ---------- */
+  .compare{padding:clamp(64px,10vh,130px) var(--pad);border-top:1px solid var(--rule)}
+  .tablewrap{overflow-x:auto;margin-top:clamp(26px,3.4vw,46px)}
+  table{border-collapse:collapse;width:100%;min-width:620px}
+  th,td{
+    text-align:left;padding:clamp(14px,1.5vw,20px) clamp(12px,1.4vw,20px);
+    border-bottom:1px solid var(--rule);white-space:nowrap;
+  }
+  thead th{
+    font-family:var(--body);font-weight:300;font-size:9px;letter-spacing:.28em;
+    text-transform:uppercase;color:rgba(239,227,212,.42);
+  }
+  tbody th{font-family:var(--display);font-weight:400;font-size:clamp(14px,1.2vw,18px)}
+  tbody td{font-size:clamp(13px,1vw,15.5px);color:var(--sand-dim)}
+  tbody tr{transition:background .35s ease}
+  tbody tr:hover{background:rgba(239,227,212,.035)}
+  tbody td.hi{color:var(--gold)}
+
+  /* ---------- closing ---------- */
+  .closing{position:relative;min-height:min(74vh,720px);display:flex;align-items:flex-end;overflow:hidden}
+  .closing img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+  .closing::after{
+    content:'';position:absolute;inset:0;
+    background:
+      linear-gradient(to top, rgba(7,5,3,.92) 0%, rgba(7,5,3,.78) 12%, rgba(7,5,3,.58) 26%,
+        rgba(7,5,3,.38) 40%, rgba(7,5,3,.2) 56%, rgba(7,5,3,.07) 74%, rgba(7,5,3,0) 100%),
+      linear-gradient(to right, rgba(7,5,3,.5) 0%, rgba(7,5,3,.28) 34%, rgba(7,5,3,0) 72%);
+  }
+  .closing .inner{
+    position:relative;z-index:2;width:100%;
+    padding:0 var(--pad) clamp(56px,8vh,96px);
+    display:flex;align-items:flex-end;justify-content:space-between;
+    gap:clamp(24px,5vw,90px);flex-wrap:wrap;
+  }
+  .closing h2{
+    font-family:var(--display);font-weight:400;
+    font-size:clamp(26px,3.4vw,52px);line-height:1.08;max-width:18ch;
+    margin-top:clamp(16px,1.8vw,24px);
+  }
+  .closing .sub{
+    margin-top:1.15em;max-width:42ch;
+    font-size:clamp(15px,1.15vw,19px);line-height:1.6;color:rgba(239,227,212,.78);
+  }
+  .btn{
+    display:inline-flex;align-items:center;cursor:pointer;text-decoration:none;white-space:nowrap;
+    padding:17px 34px;border-radius:999px;
+    font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--sand);
+    background:linear-gradient(180deg, rgba(150,72,42,.62) 0%, rgba(96,44,26,.5) 100%);
+    border:1px solid rgba(227,176,114,.46);
+    box-shadow:0 12px 38px rgba(7,5,3,.45), inset 0 1px 0 rgba(255,235,214,.2);
+    transition:background .35s ease,border-color .35s ease,transform .35s cubic-bezier(.2,.8,.2,1);
+  }
+  .btn:hover{
+    transform:translateY(-2px);
+    background:linear-gradient(180deg, rgba(203,142,84,.78) 0%, rgba(150,72,42,.66) 100%);
+    border-color:rgba(227,176,114,.8);
+  }
+
+  footer{
+    display:flex;flex-wrap:wrap;justify-content:space-between;gap:20px 40px;
+    padding:clamp(28px,4vh,44px) var(--pad);border-top:1px solid var(--rule);
+    font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:rgba(239,227,212,.42);
+  }
+  footer a{text-decoration:none;transition:color .3s ease}
+  footer a:hover{color:var(--gold)}
+
+  .backlink{
+    position:fixed;left:var(--pad);bottom:clamp(22px,3.6vh,40px);z-index:40;
+    display:inline-flex;align-items:center;gap:10px;text-decoration:none;
+    font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--sand-dim);
+    transition:color .35s ease,gap .35s cubic-bezier(.2,.8,.2,1),opacity .45s ease;
+  }
+  .backlink:hover{color:var(--sand);gap:16px}
+  body.scrolled .backlink{opacity:0;pointer-events:none}
+  .backlink s{display:block;width:22px;height:1px;background:currentColor;text-decoration:none}
+
+  @media (max-width:900px){
+    .band{grid-template-columns:1fr;gap:26px}
+    .band:nth-of-type(even) .shot{order:0}
+    .beat + .beat{border-left:0;border-top:1px solid var(--rule);padding-left:0}
+    .beat{padding-right:0}
+    .backlink{display:none}
+  }
+</style>
+</head>
+<body>
+
+<div id="grain"></div>
+
+<header id="hdr">
+  <a class="lockup" href="index.html" aria-label="ORO — Mars Residences">
+    <span class="oro" id="oro">ORO</span>
+    <span class="sub" id="sub">MARS RESIDENCES</span>
+  </a>
+  <button class="burger" id="burger" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</header>
+
+<div id="menu">
+  <nav>
+    <a href="index.html"><em>01</em><span>ORO</span></a>
+    <a href="collection.html"><em>02</em><span>The Collection</span></a>
+    <a href="life.html" aria-current="page"><em>03</em><span>Life on Mars</span></a>
+    <a href="index.html#reserve"><em>04</em><span>Reserve Your View</span></a>
+  </nav>
+  <div class="menu-foot">
+    <span>Sales Gallery · Aurora Vallis</span>
+    <span>residences@oro.mars</span>
+    <span>Launch Window 2041</span>
+  </div>
+</div>
+
+<a class="backlink" href="index.html"><s></s><span>Back to the experience</span></a>
+
+<!-- ---------------- hero ---------------- -->
+<section class="hero rv" id="hero">
+  <img src="public/life/hero.jpg" alt="The ORO settlement on the southern rim of Aurora Vallis at last light" />
+  <div class="inner">
+    <p class="eyebrow">The neighbourhood</p>
+    <h1>Life on Mars</h1>
+    <p class="lede">
+      Twenty-four households on the southern rim of Aurora Vallis. Close enough to know
+      every neighbour, far enough that no window looks into another. This is what an
+      ordinary day here actually looks like.
+    </p>
+  </div>
+</section>
+
+<!-- ---------------- the sol ---------------- -->
+<section class="sol rv">
+  <p class="eyebrow">One sol</p>
+  <h2>A day here runs<br>thirty-seven minutes long.</h2>
+  <p class="intro">
+    Mars turns a little slower than Earth, so a sol is 24 hours and 39 minutes. ORO keeps
+    Martian time — the clocks stretch, the light stretches with them, and the extra
+    half-hour lands in the evening where you notice it most.
+  </p>
+  <div class="timeline">
+    <div class="beat">
+      <time>05:47</time>
+      <b>First light</b>
+      <span>The sun clears the eastern mesas. Glazing warms from cobalt to amber in about nine minutes.</span>
+    </div>
+    <div class="beat">
+      <time>07:30</time>
+      <b>The promenade</b>
+      <span>Nine hundred metres of pressurised walk, olive trees on one side, the canyon on the other.</span>
+    </div>
+    <div class="beat">
+      <time>12:00</time>
+      <b>Midday, indoors</b>
+      <span>The warmest hours. Interiors hold 21°C and one atmosphere, year-round, without exception.</span>
+    </div>
+    <div class="beat">
+      <time>17:20</time>
+      <b>The terraces</b>
+      <span>Harvest, and the shared kitchen. Most of what reaches the table was cut that afternoon.</span>
+    </div>
+    <div class="beat">
+      <time>19:05</time>
+      <b>Blue sunset</b>
+      <span>Dust scatters red light outward, so the sun sets blue. It lasts about forty minutes.</span>
+    </div>
+    <div class="beat">
+      <time>22:40</time>
+      <b>Earthrise</b>
+      <span>Earth appears as a blue-white evening star, brighter than anything else in the sky.</span>
+    </div>
+  </div>
+</section>
+
+<!-- ---------------- bands ---------------- -->
+<article class="band rv">
+  <div class="shot"><img src="public/life/commons.jpg" alt="The pressurised promenade with olive trees and the valley beyond" /></div>
+  <div>
+    <p class="eyebrow">The Promenade</p>
+    <h2>Nine hundred metres,<br>and no helmet.</h2>
+    <p class="copy">
+      Every residence connects to a single pressurised spine that runs the length of the
+      settlement. It is planted like a street, not plumbed like a tunnel — olive, fig and
+      bay in recessed stone beds, benches in the wide parts, and a continuous glass wall
+      holding back the valley. It is where the community actually happens: the walk to
+      dinner, the argument about the water budget, the children who never learned that
+      corridors are supposed to be dull.
+    </p>
+    <dl class="facts">
+      <div><dt>Length</dt><dd>900 m</dd></div>
+      <div><dt>Pressure</dt><dd>1 atm</dd></div>
+      <div><dt>Planting</dt><dd>340 trees</dd></div>
+      <div><dt>Connects</dt><dd>All 24</dd></div>
+    </dl>
+  </div>
+</article>
+
+<article class="band rv">
+  <div class="shot"><img src="public/life/terraces.jpg" alt="Terraced growing houses stepping down the slope at golden hour" /></div>
+  <div>
+    <p class="eyebrow">The Terraces</p>
+    <h2>Dinner is grown<br>four minutes away.</h2>
+    <p class="copy">
+      Eleven growing houses step down the western slope, sharing one closed water loop with
+      the residences. Between them they carry leaf crops, tomatoes, herbs, citrus under
+      glass, and a small experimental orchard that the community votes on each year. About
+      seventy percent of what ORO eats is grown at ORO; the rest arrives on the transfer
+      ships, and is treated accordingly.
+    </p>
+    <dl class="facts">
+      <div><dt>Growing houses</dt><dd>Eleven</dd></div>
+      <div><dt>Under glass</dt><dd>4,200 m²</dd></div>
+      <div><dt>Self-supplied</dt><dd>70%</dd></div>
+      <div><dt>Water loop</dt><dd>98% recovery</dd></div>
+    </dl>
+  </div>
+</article>
+
+<article class="band rv">
+  <div class="shot"><img src="public/life/observatory.jpg" alt="The ridge observatory at night with Earth low on the horizon" /></div>
+  <div>
+    <p class="eyebrow">The Observatory</p>
+    <h2>The darkest sky<br>anyone has ever owned.</h2>
+    <p class="copy">
+      No cities, no aircraft, no scattered streetlight for four hundred kilometres in any
+      direction. The ridge observatory is shared by the twenty-four households and open
+      through the night. On a clear sol you can read by Earthlight — and once every twenty-six
+      months, when the planets close, it is the brightest thing above the horizon.
+    </p>
+    <dl class="facts">
+      <div><dt>Elevation</dt><dd>+180 m</dd></div>
+      <div><dt>Light pollution</dt><dd>None</dd></div>
+      <div><dt>Access</dt><dd>All residents</dd></div>
+      <div><dt>Nearest city</dt><dd>400 km</dd></div>
+    </dl>
+  </div>
+</article>
+
+<!-- ---------------- commons grid ---------------- -->
+<section class="commons rv">
+  <p class="eyebrow">The Commons</p>
+  <h2 style="font-family:var(--display);font-weight:400;font-size:clamp(24px,2.8vw,44px);line-height:1.1;margin-top:clamp(14px,1.6vw,20px)">
+    Everything a life needs.<br>Nothing it does not.
+  </h2>
+  <div class="grid">
+    <div class="cell"><i></i><b>Water Plant</b><span>Extraction from subsurface ice, filtration and a 400-litre reserve held for every residence.</span></div>
+    <div class="cell"><i></i><b>The Kitchen</b><span>A shared table for forty, and a chef in residence three evenings a sol-week.</span></div>
+    <div class="cell"><i></i><b>Medical Suite</b><span>Two physicians on rotation, surgical capability, and a direct link to Earth specialists at 3–22 minutes' latency.</span></div>
+    <div class="cell"><i></i><b>The Baths</b><span>Warm mineral pools cut into the rock, drawing on the same closed loop as the terraces.</span></div>
+    <div class="cell"><i></i><b>Workshop &amp; Print Hall</b><span>The regolith printer that built the shells. Residents use it for everything from furniture to spares.</span></div>
+    <div class="cell"><i></i><b>School Room</b><span>Small, and taught in person. Currently nine children between four and sixteen.</span></div>
+    <div class="cell"><i></i><b>Rover Bay</b><span>Six pressurised rovers, maintained and shared. Range of 340 km on a single charge.</span></div>
+    <div class="cell"><i></i><b>The Trust</b><span>Forty square kilometres of the valley held in perpetuity, and never to be built upon.</span></div>
+  </div>
+</section>
+
+<!-- ---------------- getting there ---------------- -->
+<section class="compare rv">
+  <p class="eyebrow">Getting there</p>
+  <h3 style="font-family:var(--display);font-weight:400;font-size:clamp(24px,2.8vw,44px);line-height:1.1;margin-top:clamp(14px,1.6vw,20px)">
+    The journey, honestly stated.
+  </h3>
+  <div class="tablewrap">
+    <table>
+      <thead>
+        <tr>
+          <th scope="col">Stage</th>
+          <th scope="col">Duration</th>
+          <th scope="col">Cadence</th>
+          <th scope="col">Notes</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th scope="row">Earth departure</th>
+          <td>—</td><td class="hi">Every 26 months</td>
+          <td>Transfer window; four weeks' notice</td>
+        </tr>
+        <tr>
+          <th scope="row">Transit</th>
+          <td>7 months</td><td>Continuous</td>
+          <td>Private cabin, 0.38 g spin section</td>
+        </tr>
+        <tr>
+          <th scope="row">Descent &amp; arrival</th>
+          <td>1 day</td><td>On landing</td>
+          <td>Lander pad at the settlement edge</td>
+        </tr>
+        <tr>
+          <th scope="row">Acclimatisation</th>
+          <td>3 weeks</td><td>Once</td>
+          <td>Supervised; medical suite on site</td>
+        </tr>
+        <tr>
+          <th scope="row">Return</th>
+          <td>7 months</td><td class="hi">Every 26 months</td>
+          <td>Unlimited returns; residence held</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ---------------- closing ---------------- -->
+<section class="closing rv">
+  <img src="public/life/evening.jpg" alt="Residents at the evening terrace above the canyon" />
+  <div class="inner">
+    <div>
+      <p class="eyebrow">Come and see</p>
+      <h2>You can visit the valley before you commit to it.</h2>
+      <p class="sub">The sales gallery holds a full-scale residence and a fourteen-day stay programme, in Aurora Vallis and on Earth.</p>
+    </div>
+    <a class="btn" href="mailto:residences@oro.mars?subject=ORO%20—%20Life%20on%20Mars">Arrange a visit</a>
+  </div>
+</section>
+
+<footer>
+  <span>ORO Mars Residences</span>
+  <span>Sales Gallery · Aurora Vallis</span>
+  <a href="mailto:residences@oro.mars">residences@oro.mars</a>
+  <span>Launch Window 2041</span>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  function fitLockup(){
+    var oro = document.getElementById('oro'), sub = document.getElementById('sub');
+    if (!oro || !sub) return;
+    sub.style.transform = 'none';
+    var a = oro.getBoundingClientRect().width, b = sub.getBoundingClientRect().width;
+    if (a > 0 && b > 0) sub.style.transform = 'scaleX(' + (a / b) + ')';
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitLockup);
+  setTimeout(fitLockup, 400);
+  setTimeout(fitLockup, 1600);
+  window.addEventListener('resize', fitLockup);
+
+  var burger = document.getElementById('burger');
+  burger.addEventListener('click', function(){
+    var open = document.body.classList.toggle('menu-open');
+    burger.setAttribute('aria-expanded', open ? 'true' : 'false');
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape'){ document.body.classList.remove('menu-open'); burger.setAttribute('aria-expanded','false'); }
+  });
+
+  var hdr = document.getElementById('hdr');
+  window.addEventListener('scroll', function(){
+    hdr.classList.toggle('stuck', window.scrollY > window.innerHeight * .7);
+    document.body.classList.toggle('scrolled', window.scrollY > window.innerHeight * .45);
+  }, { passive:true });
+
+  var io = new IntersectionObserver(function(entries){
+    entries.forEach(function(en){
+      if (en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+    });
+  }, { threshold:.15, rootMargin:'0px 0px -8% 0px' });
+  document.querySelectorAll('.rv').forEach(function(el){ io.observe(el); });
+  document.getElementById('hero').classList.add('in');
+})();
+</script>
+</body>
+</html>

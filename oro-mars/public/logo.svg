@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 273.78 161.78">
+  <defs>
+    <style>
+      .cls-1 {
+        font-family: Sansation-Light, 'Sansation Light';
+        font-size: 25.82px;
+        font-weight: 300;
+      }
+
+      .cls-1, .cls-2 {
+        fill: #fff;
+      }
+
+      .cls-2 {
+        font-family: BrunoAce-Regular, 'Bruno Ace';
+        font-size: 85.83px;
+      }
+    </style>
+  </defs>
+  <text class="cls-2" transform="translate(13.98 94.58)"><tspan x="0" y="0">ORO</tspan></text>
+  <text class="cls-1" transform="translate(17.23 134.68) scale(.88 1)"><tspan x="0" y="0">MARS RESIDENCES</tspan></text>
+</svg>
