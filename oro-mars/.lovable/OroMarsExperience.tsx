@@ -757,7 +757,9 @@ export default function OroMarsExperience() {
         {SECTIONS.map((s, i) => (
           <article
             key={s.key}
-            ref={(el) => (slideRefs.current[i] = el)}
+            ref={(el) => {
+              slideRefs.current[i] = el;
+            }}
             data-in="0"
             style={{ opacity: 0, visibility: "hidden" }}
             className={`group absolute inset-x-0 px-5 md:px-12 ${
