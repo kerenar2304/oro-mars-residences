@@ -109,10 +109,9 @@ const TABLE: [string, string, string, string, string, string, string, boolean][]
 const MENU = [
   { label: "ORO", href: "/" },
   { label: "The Collection", href: "/collection", current: true },
-  { label: "Life on Mars", href: "/#life" },
+  { label: "Life on Mars", href: "/life" },
   { label: "Reserve Your View", href: "/#reserve" },
 ];
-
 
 const GRAIN =
   "url(\"data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='160' height='160' filter='url(%23n)'/></svg>\")";

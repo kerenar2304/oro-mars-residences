@@ -137,17 +137,15 @@ const SECTIONS: Section[] = [
 ];
 
 /**
- * Main navigation. Each of these becomes its own page later — until then the
- * entry jumps to the matching moment in the scroll. Swap `section` for a
- * `to` route once the pages exist.
+ * Main navigation. Entries with `href` leave for their own page; entries with
+ * `section` jump to that moment in this page's scroll.
  */
-const MENU: { label: string; section: number }[] = [
+const MENU: { label: string; href?: string; section?: number }[] = [
   { label: "ORO", section: 0 },
-  { label: "The Collection", section: 6 },
-  { label: "Life on Mars", section: 3 },
+  { label: "The Collection", href: "/collection" },
+  { label: "Life on Mars", href: "/life" },
   { label: "Reserve Your View", section: 9 },
 ];
-
 
 const frameSrc = (key: string, k: number) =>
   `${CDN}/frames/${key}/${String(k).padStart(4, "0")}.jpg`;
@@ -852,21 +850,35 @@ export default function OroMarsExperience() {
         style={{ background: "hsl(var(--oro-ink)/.92)" }}
       >
         <nav className="flex flex-col">
-          {MENU.map((m, mi) => (
-            <button
-              key={m.label}
-              onClick={() => {
-                setMenuOpen(false);
-                goTo(m.section);
-              }}
-              className="flex items-baseline gap-4 border-b border-oro-sand/10 py-3 text-left font-display text-xl leading-tight text-oro-sand opacity-55 transition-all duration-300 hover:pl-3.5 hover:text-oro-gold hover:opacity-100 md:gap-8 md:text-[44px]"
-            >
-              <span className="font-body text-[10px] font-light tracking-[0.3em] text-oro-sand/35">
-                {String(mi + 1).padStart(2, "0")}
-              </span>
-              <span>{m.label}</span>
-            </button>
-          ))}
+          {MENU.map((m, mi) => {
+            const inner = (
+              <>
+                <span className="font-body text-[10px] font-light tracking-[0.3em] text-oro-sand/35">
+                  {String(mi + 1).padStart(2, "0")}
+                </span>
+                <span>{m.label}</span>
+              </>
+            );
+            const cls =
+              "flex items-baseline gap-4 border-b border-oro-sand/10 py-3 text-left font-display text-xl leading-tight text-oro-sand opacity-55 transition-all duration-300 hover:pl-3.5 hover:text-oro-gold hover:opacity-100 md:gap-8 md:text-[44px]";
+
+            return m.href ? (
+              <a key={m.label} href={m.href} className={cls}>
+                {inner}
+              </a>
+            ) : (
+              <button
+                key={m.label}
+                onClick={() => {
+                  setMenuOpen(false);
+                  goTo(m.section ?? 0);
+                }}
+                className={cls}
+              >
+                {inner}
+              </button>
+            );
+          })}
         </nav>
         <div className="mt-8 flex flex-wrap gap-6 text-[11px] tracking-[0.16em] text-oro-sand/60 md:mt-14 md:gap-16">
           <span>Sales Gallery · Aurora Vallis</span>

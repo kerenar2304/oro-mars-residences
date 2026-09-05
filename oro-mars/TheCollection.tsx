@@ -106,7 +106,7 @@ const TABLE: [string, string, string, string, string, string, string, boolean][]
 const MENU = [
   { label: "ORO", href: "/" },
   { label: "The Collection", href: "/collection", current: true },
-  { label: "Life on Mars", href: "/#life" },
+  { label: "Life on Mars", href: "/life" },
   { label: "Reserve Your View", href: "/#reserve" },
 ];
 
