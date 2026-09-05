@@ -68,6 +68,8 @@ type Section = {
   words?: { t: [number, number]; x: string; y: string; text: string }[];
   /** play the sequence over the first slice of the section, then hold the frame */
   scrubTo?: number;
+  /** pan the cover-crop toward this horizontal anchor (0 = left edge, .5 = centre) */
+  panTo?: number;
   /**
    * Annotation callouts. `a` (anchor) and `l` (label) are normalised IMAGE
    * coordinates, so they stay pinned to the building through any cover-crop.
@@ -115,6 +117,7 @@ const SECTIONS: Section[] = [
     cap: "The best technology is invisible",
     cap2: "Until you want to see it.",
     scrubTo: 0.55,
+    panTo: 0.12,
     notes: [
       { t: 0.58, a: [0.091, 0.334], l: [0.15, 0.2], title: "Solar Energy Network" },
       { t: 0.66, a: [0.129, 0.478], l: [0.235, 0.47], title: "Closed Loop Air System" },
@@ -184,6 +187,25 @@ export default function OroMarsExperience() {
   const bootTarget = useMemo(() => 1 + (SECTIONS[1].n ?? 1), []);
 
   /* ---------------- painting ---------------- */
+
+  /* Horizontal anchor of the cover-crop. 0.5 centres; 0 hugs the left edge.
+     On a wide viewport the frame barely overflows, so this does almost nothing —
+     on a narrow one it is the difference between seeing the building and not. */
+  const focusX = useRef(0.5);
+
+  const focusFor = useCallback((i: number, t: number) => {
+    const s = SECTIONS[i];
+    if (s.panTo === undefined) return 0.5;
+    const inEnd = s.scrubTo ?? 0.5;
+    const outStart = 0.9;
+    let k: number;
+    if (t <= inEnd) k = t / inEnd;
+    else if (t < outStart) k = 1;
+    else k = Math.max(0, 1 - (t - outStart) / (1 - outStart));
+    k = k * k * (3 - 2 * k); // smoothstep, so it drifts
+    return 0.5 + (s.panTo - 0.5) * k;
+  }, []);
+
   const paint = useCallback((img: HTMLImageElement | null) => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -197,7 +219,7 @@ export default function OroMarsExperience() {
     const scale = Math.max(cw / use.naturalWidth, ch / use.naturalHeight);
     const w = use.naturalWidth * scale;
     const h = use.naturalHeight * scale;
-    ctx.drawImage(use, (cw - w) / 2, (ch - h) / 2, w, h);
+    ctx.drawImage(use, (cw - w) * focusX.current, (ch - h) / 2, w, h);
   }, []);
 
   const pick = useCallback((i: number, t: number) => {
@@ -293,7 +315,7 @@ export default function OroMarsExperience() {
     const k = img?.naturalWidth ? Math.max(sw / img.naturalWidth, sh / img.naturalHeight) : 1;
     const dw = img?.naturalWidth ? img.naturalWidth * k : sw;
     const dh = img?.naturalHeight ? img.naturalHeight * k : sh;
-    const ox = (sw - dw) / 2;
+    const ox = (sw - dw) * focusX.current;
     const oy = (sh - dh) / 2;
 
     SECTIONS.forEach((sec, si) => {
@@ -314,7 +336,9 @@ export default function OroMarsExperience() {
         if (dot) dot.style.opacity = String(o);
         if (o <= 0.01) return;
 
-        const lx = ox + def.l[0] * dw;
+        const bw = box.offsetWidth;
+        // never let a label run off the edge — on a phone the ideal spot is often outside
+        const lx = Math.max(12, Math.min(ox + def.l[0] * dw, sw - bw - 12));
         const ly = oy + def.l[1] * dh;
         box.style.left = `${lx}px`;
         box.style.top = `${ly}px`;
@@ -325,7 +349,6 @@ export default function OroMarsExperience() {
         dot.setAttribute("cx", String(ax));
         dot.setAttribute("cy", String(ay));
         // the leader leaves from whichever edge of the label faces the anchor
-        const bw = box.offsetWidth;
         const right = ax > lx + bw / 2;
         const attach = right ? lx + bw + 8 : lx - 8;
         const elbow = right ? lx + bw + 24 : lx - 24;
@@ -405,6 +428,7 @@ export default function OroMarsExperience() {
   useEffect(() => {
     draw.current = (force?: boolean) => {
       const [i, t] = currentSection();
+      focusX.current = focusFor(i, t);
 
       if (SECTIONS[i].loop) {
         const len = assets.current[i]?.length ?? 1;
@@ -545,7 +569,7 @@ export default function OroMarsExperience() {
       window.removeEventListener("keydown", onKey);
       cancelAnimationFrame(loopRaf);
     };
-  }, [currentSection, fitLockup, goTo, layout, layoutNotes, loadSection, paint, pick, snapScroll]);
+  }, [currentSection, fitLockup, focusFor, goTo, layout, layoutNotes, loadSection, paint, pick, snapScroll]);
 
   /* ---------------- render ---------------- */
   return (
@@ -710,7 +734,7 @@ export default function OroMarsExperience() {
                   backdropFilter: "blur(12px) saturate(1.15)",
                   boxShadow: "0 10px 34px hsl(var(--oro-ink)/.55), inset 0 1px 0 hsl(var(--oro-sand)/.07)",
                 }}
-                className="inline-flex items-center gap-3 whitespace-nowrap rounded-full border border-oro-sand/[.26] py-[11px] pl-[17px] pr-[21px] text-[clamp(11.5px,0.92vw,13.5px)] font-normal tracking-[0.05em] text-oro-sand"
+                className="inline-flex items-center gap-[9px] whitespace-nowrap rounded-full border border-oro-sand/[.26] py-[9px] pl-3 pr-[15px] text-[11px] font-normal tracking-[0.02em] text-oro-sand sm:gap-3 sm:py-[11px] sm:pl-[17px] sm:pr-[21px] sm:text-[clamp(11.5px,0.92vw,13.5px)] sm:tracking-[0.05em]"
               >
                 <i className="block h-[5px] w-[5px] shrink-0 animate-[oro-pip_2.6s_ease-in-out_infinite] rounded-full bg-oro-gold" />
                 {n.title}

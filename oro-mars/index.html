@@ -285,6 +285,10 @@
   #bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s ease}
   #pct{font-size:9px;letter-spacing:.4em;color:var(--sand-dim)}
 
+  @media (max-width:640px){
+    /* the annotation labels have to share a phone screen with the building */
+    .chip.tag{gap:9px;padding:9px 15px 9px 12px;font-size:11px;letter-spacing:.02em}
+  }
   @media (max-width:760px){
     .dots{gap:11px;right:12px}
     .dot b{display:none}
@@ -368,7 +372,7 @@
 
     { key:'seq06', n:97, vh:280, label:'Systems',   nav:'The Systems',
       ch:'05 · The Systems',    cap:'The best technology is invisible<i>Until you want to see it.</i>',
-      scrubTo:.55,
+      scrubTo:.55, panTo:.12,
       notes:[
         { t:.58, a:[.091,.334], l:[.150,.200], title:'Solar Energy Network' },
         { t:.66, a:[.129,.478], l:[.235,.470], title:'Closed Loop Air System' },
@@ -650,6 +654,22 @@
   /* ---------------- painting ---------------- */
   var lastPainted = null;
 
+  /* Horizontal anchor of the cover-crop. 0.5 centres; 0 hugs the left edge.
+     On a wide viewport the frame barely overflows, so this does almost nothing —
+     on a narrow one it is the difference between seeing the building and not. */
+  var focusX = .5;
+
+  function focusFor(i, t){
+    var s = SECTIONS[i];
+    if (s.panTo === undefined) return .5;
+    var inEnd = s.scrubTo || .5, outStart = .90, k;
+    if (t <= inEnd) k = t / inEnd;
+    else if (t < outStart) k = 1;
+    else k = Math.max(0, 1 - (t - outStart) / (1 - outStart));
+    k = k * k * (3 - 2 * k);                       // smoothstep, so it drifts
+    return .5 + (s.panTo - .5) * k;
+  }
+
   function paint(img){
     if (!img || !img.naturalWidth) { img = lastPainted; }
     if (!img || !img.naturalWidth) return;
@@ -657,7 +677,7 @@
     var cw = canvas.width, ch = canvas.height;
     var scale = Math.max(cw / img.naturalWidth, ch / img.naturalHeight);
     var w = img.naturalWidth * scale, h = img.naturalHeight * scale;
-    ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
+    ctx.drawImage(img, (cw - w) * focusX, (ch - h) / 2, w, h);
   }
 
   function pick(i, t){
@@ -686,7 +706,7 @@
       var sw = canvas.clientWidth, sh = canvas.clientHeight;
       var k = (img && img.naturalWidth) ? Math.max(sw / img.naturalWidth, sh / img.naturalHeight) : 1;
       var dw = img ? img.naturalWidth * k : sw, dh = img ? img.naturalHeight * k : sh;
-      var ox = (sw - dw) / 2, oy = (sh - dh) / 2;
+      var ox = (sw - dw) * focusX, oy = (sh - dh) / 2;
 
       for (var nj = 0; nj < list.length; nj++){
         var n = list[nj], def = n.def, o = 0;
@@ -700,7 +720,10 @@
         if (n.dot)  n.dot.style.opacity  = o;
         if (o <= .01) continue;
 
+        var bw = n.box.offsetWidth;
         var lx = ox + def.l[0] * dw, ly = oy + def.l[1] * dh;
+        // never let a label run off the edge — on a phone the ideal spot is often outside
+        lx = Math.max(12, Math.min(lx, sw - bw - 12));
         n.box.style.left = lx + 'px';
         n.box.style.top  = ly + 'px';
         if (!def.a) continue;
@@ -708,7 +731,6 @@
         var ax = ox + def.a[0] * dw, ay = oy + def.a[1] * dh;
         n.dot.setAttribute('cx', ax); n.dot.setAttribute('cy', ay);
         // the leader leaves from whichever edge of the label faces the anchor
-        var bw = n.box.offsetWidth;
         var attach = (ax > lx + bw / 2) ? (lx + bw + 8) : (lx - 8);
         var elbow  = (ax > lx + bw / 2) ? (lx + bw + 24) : (lx - 24);
         n.line.setAttribute('points',
@@ -733,6 +755,7 @@
 
   function draw(force){
     var c = current(), i = c[0], t = c[1];
+    focusX = focusFor(i, t);
 
     if (SECTIONS[i].loop){
       paint(pick(i, loopIdx / Math.max(1, (assets[i] ? assets[i].length : 1) - 1)));
