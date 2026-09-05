@@ -306,30 +306,9 @@
   #bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s ease}
   #pct{font-size:9px;letter-spacing:.4em;color:var(--sand-dim)}
 
-  /* numbered marker drawn beside each anchor — only used in the phone legend layout */
-  .leads .marker{
-    /* the site's own numeral idiom: light, wide-tracked — as in the menu */
-    font-family:var(--body);font-weight:300;font-size:9px;letter-spacing:.3em;
-    fill:rgba(239,227,212,.94);opacity:0;
-  }
-  /* the same warm glass as the closing CTA */
-  .leads .marker-pill{
-    fill:url(#oroGlass);stroke:rgba(227,176,114,.46);stroke-width:1;opacity:0;
-  }
-  .chip.tag .idx{display:none}
-
   @media (max-width:820px){
     .chip.tag{gap:9px;padding:8px 14px 8px 11px;font-size:11px;letter-spacing:.02em}
   }
-  /* the number belongs to the portrait legend only — turned landscape, the labels
-     sit beside their systems again and there is nothing to pair them with */
-  @media (max-width:820px) and (orientation:portrait){
-    .chip.tag .idx{
-      display:inline;margin-right:11px;font-weight:300;
-      font-size:9px;letter-spacing:.3em;color:rgba(239,227,212,.35);
-    }
-  }
-
   @media (max-width:760px){
     .dots{gap:11px;right:12px}
     .dot b{display:none}
@@ -512,17 +491,10 @@
       nl.className = 'notelayer';
       var svg = document.createElementNS(SVGNS, 'svg');
       svg.setAttribute('class', 'leads');
-      // the same warm glass as the closing CTA, so the markers belong to the set
-      svg.innerHTML =
-        '<defs><linearGradient id="oroGlass" x1="0" y1="0" x2="0" y2="1">' +
-          '<stop offset="0%" stop-color="rgb(150,72,42)" stop-opacity=".78"/>' +
-          '<stop offset="100%" stop-color="rgb(96,44,26)" stop-opacity=".66"/>' +
-        '</linearGradient></defs>';
       nl.appendChild(svg);
 
-      noteEls[i] = s.notes.map(function(nt, nj){
-        var num = String(nj + 1).padStart(2, '0');
-        var line = null, dot = null, tag = null, pill = null;
+      noteEls[i] = s.notes.map(function(nt){
+        var line = null, dot = null;
         if (nt.a){
           line = document.createElementNS(SVGNS, 'polyline');
           line.setAttribute('fill', 'none');
@@ -531,24 +503,14 @@
           dot = document.createElementNS(SVGNS, 'circle');
           dot.setAttribute('r', '2.5');
           dot.setAttribute('fill', '#E3B072');
-          // the number that pairs a marker on the building with its legend row,
-          // on a glass pill so it holds against a bright frame
-          pill = document.createElementNS(SVGNS, 'rect');
-          pill.setAttribute('class', 'marker-pill');
-          pill.setAttribute('rx', '9'); pill.setAttribute('ry', '9');
-          pill.setAttribute('width', '30'); pill.setAttribute('height', '18');
-          tag = document.createElementNS(SVGNS, 'text');
-          tag.setAttribute('class', 'marker');
-          tag.setAttribute('text-anchor', 'middle');
-          tag.textContent = num;
-          svg.appendChild(line); svg.appendChild(pill); svg.appendChild(dot); svg.appendChild(tag);
+          svg.appendChild(line); svg.appendChild(dot);
         }
 
         var box = document.createElement('div');
         box.className = 'note';
-        box.innerHTML = '<span class="chip tag"><i class="pip"></i><b class="idx">' + num + '</b>' + nt.title + '</span>';
+        box.innerHTML = '<span class="chip tag"><i class="pip"></i>' + nt.title + '</span>';
         nl.appendChild(box);
-        return { box:box, line:line, dot:dot, tag:tag, pill:pill, def:nt };
+        return { box:box, line:line, dot:dot, def:nt };
       });
 
       copyEl.appendChild(nl);
@@ -773,10 +735,19 @@
       // turn the phone and the anchored labels come back on their own
       var narrow = sw < 820 && sh >= sw;
       // measured off the real header, so the legend clears the logo at any size
-      var LEG_X = 16, LEG_ROW = 38;
-      // rows are centred on their y, so add half a row to clear the header properly
+      // The list sits in the band between the logo and the roofline, centred in it,
+      // tightening its spacing rather than spilling onto the building.
+      var LEG_X = 16;
       var boxH = (list[0] && list[0].box) ? list[0].box.offsetHeight : 30;
-      var LEG_TOP = (hdrEl ? hdrEl.getBoundingClientRect().bottom : 88) + 22 + boxH / 2;
+      var bandTop = (hdrEl ? hdrEl.getBoundingClientRect().bottom : 88) + 16;
+      var bandBot = sh * .30;
+      var LEG_ROW = 38;
+      var blockH = (list.length - 1) * LEG_ROW + boxH;
+      if (blockH > bandBot - bandTop){
+        LEG_ROW = Math.max(28, (bandBot - bandTop - boxH) / Math.max(1, list.length - 1));
+        blockH = (list.length - 1) * LEG_ROW + boxH;
+      }
+      var LEG_TOP = bandTop + Math.max(0, (bandBot - bandTop - blockH) / 2) + boxH / 2;
 
       for (var nj = 0; nj < list.length; nj++){
         var n = list[nj], def = n.def, o = 0;
@@ -794,23 +765,15 @@
         var ay = def.a ? oy + def.a[1] * dh : 0;
 
         if (narrow){
-          /* A phone has no room for a label beside the building. The markers stay
-             on the systems and carry a number; the labels become a legend. */
-          n.box.style.left = LEG_X + 'px';
-          n.box.style.top  = (LEG_TOP + nj * LEG_ROW) + 'px';
+          /* A portrait screen has no room beside the building, so the labels
+             become a plain list and the frame is left completely clean. */
+          n.box.style.left = LEG_X + "px";
+          n.box.style.top  = (LEG_TOP + nj * LEG_ROW) + "px";
           if (n.line) n.line.style.opacity = 0;
-          if (def.a){
-            n.dot.setAttribute('cx', ax); n.dot.setAttribute('cy', ay);
-            n.pill.setAttribute('x', ax + 10); n.pill.setAttribute('y', ay - 9);
-            n.tag.setAttribute('x', ax + 24); n.tag.setAttribute('y', ay + 3.5);
-            n.pill.style.opacity = o;
-            n.tag.style.opacity = o;
-          }
+          if (n.dot)  n.dot.style.opacity  = 0;
           continue;
         }
 
-        if (n.tag) n.tag.style.opacity = 0;
-        if (n.pill) n.pill.style.opacity = 0;
         var bw = n.box.offsetWidth;
         var lx = ox + def.l[0] * dw, ly = oy + def.l[1] * dh;
         lx = Math.max(12, Math.min(lx, sw - bw - 12));

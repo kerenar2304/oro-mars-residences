@@ -165,8 +165,6 @@ export default function OroMarsExperience() {
   const noteBoxRefs = useRef<(HTMLDivElement | null)[][]>(SECTIONS.map(() => []));
   const noteLineRefs = useRef<(SVGPolylineElement | null)[][]>(SECTIONS.map(() => []));
   const noteDotRefs = useRef<(SVGCircleElement | null)[][]>(SECTIONS.map(() => []));
-  const noteTagRefs = useRef<(SVGTextElement | null)[][]>(SECTIONS.map(() => []));
-  const notePillRefs = useRef<(SVGRectElement | null)[][]>(SECTIONS.map(() => []));
   const oroRef = useRef<HTMLSpanElement>(null);
   const subRef = useRef<HTMLSpanElement>(null);
 
@@ -322,22 +320,29 @@ export default function OroMarsExperience() {
     // turn the phone and the anchored labels come back on their own
     const narrow = sw < 820 && sh >= sw;
     const LEG_X = 16;
-    const LEG_ROW = 38;
 
     SECTIONS.forEach((sec, si) => {
       if (!sec.notes) return;
-      // rows are centred on their y, so add half a row to clear the header properly
+      // The list sits in the band between the logo and the roofline, centred in it,
+      // tightening its spacing rather than spilling onto the building.
       const firstBox = noteBoxRefs.current[si]?.[0];
       const boxH = firstBox ? firstBox.offsetHeight : 30;
       const headerBottom = document.querySelector("header")?.getBoundingClientRect().bottom ?? 88;
-      const LEG_TOP = headerBottom + 22 + boxH / 2;
+      const count = sec.notes.length;
+      const bandTop = headerBottom + 16;
+      const bandBot = sh * 0.3;
+      let LEG_ROW = 38;
+      let blockH = (count - 1) * LEG_ROW + boxH;
+      if (blockH > bandBot - bandTop) {
+        LEG_ROW = Math.max(28, (bandBot - bandTop - boxH) / Math.max(1, count - 1));
+        blockH = (count - 1) * LEG_ROW + boxH;
+      }
+      const LEG_TOP = bandTop + Math.max(0, (bandBot - bandTop - blockH) / 2) + boxH / 2;
 
       sec.notes.forEach((def, nj) => {
         const box = noteBoxRefs.current[si]?.[nj];
         const line = noteLineRefs.current[si]?.[nj];
         const dot = noteDotRefs.current[si]?.[nj];
-        const tag = noteTagRefs.current[si]?.[nj];
-        const pill = notePillRefs.current[si]?.[nj];
         if (!box) return;
 
         let o = 0;
@@ -354,26 +359,15 @@ export default function OroMarsExperience() {
         const ay = def.a ? oy + def.a[1] * dh : 0;
 
         if (narrow) {
-          /* A phone has no room for a label beside the building. The markers stay
-             on the systems and carry a number; the labels become a legend. */
+          /* A portrait screen has no room beside the building, so the labels
+             become a plain list and the frame is left completely clean. */
           box.style.left = `${LEG_X}px`;
           box.style.top = `${LEG_TOP + nj * LEG_ROW}px`;
           if (line) line.style.opacity = "0";
-          if (def.a && dot && tag && pill) {
-            dot.setAttribute("cx", String(ax));
-            dot.setAttribute("cy", String(ay));
-            pill.setAttribute("x", String(ax + 10));
-            pill.setAttribute("y", String(ay - 9));
-            tag.setAttribute("x", String(ax + 24));
-            tag.setAttribute("y", String(ay + 3.5));
-            pill.style.opacity = String(o);
-            tag.style.opacity = String(o);
-          }
+          if (dot) dot.style.opacity = "0";
           return;
         }
 
-        if (tag) tag.style.opacity = "0";
-        if (pill) pill.style.opacity = "0";
         const bw = box.offsetWidth;
         const lx = Math.max(12, Math.min(ox + def.l[0] * dw, sw - bw - 12));
         const ly = oy + def.l[1] * dh;
@@ -746,13 +740,6 @@ export default function OroMarsExperience() {
       {/* system annotations — leader lines + spec callouts */}
       <div className="pointer-events-none fixed inset-0 z-20">
         <svg className="absolute inset-0 h-full w-full overflow-visible">
-          {/* the same warm glass as the closing CTA, so the markers belong to the set */}
-          <defs>
-            <linearGradient id="oroGlass" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgb(150,72,42)" stopOpacity={0.78} />
-              <stop offset="100%" stopColor="rgb(96,44,26)" stopOpacity={0.66} />
-            </linearGradient>
-          </defs>
           {SECTIONS.map((s, si) =>
             s.notes?.map((n, nj) =>
               n.a ? (
@@ -776,38 +763,6 @@ export default function OroMarsExperience() {
                     fill="hsl(var(--oro-gold))"
                     style={{ opacity: 0 }}
                   />
-                  {/* the number that pairs a marker on the building with its legend
-                      row, on a glass pill so it holds against a bright frame */}
-                  <rect
-                    ref={(el) => {
-                      if (!notePillRefs.current[si]) notePillRefs.current[si] = [];
-                      notePillRefs.current[si][nj] = el;
-                    }}
-                    rx={9}
-                    ry={9}
-                    width={30}
-                    height={18}
-                    fill="url(#oroGlass)"
-                    stroke="hsl(var(--oro-gold)/.46)"
-                    strokeWidth={1}
-                    style={{ opacity: 0 }}
-                  />
-                  <text
-                    textAnchor="middle"
-                    ref={(el) => {
-                      if (!noteTagRefs.current[si]) noteTagRefs.current[si] = [];
-                      noteTagRefs.current[si][nj] = el;
-                    }}
-                    fill="hsl(var(--oro-sand)/.94)"
-                    style={{
-                      opacity: 0,
-                      // the site's own numeral idiom: light, wide-tracked
-                      font: "300 9px/1 Sansation, system-ui, sans-serif",
-                      letterSpacing: ".3em",
-                    }}
-                  >
-                    {String(nj + 1).padStart(2, "0")}
-                  </text>
                 </g>
               ) : null
             )
@@ -834,10 +789,6 @@ export default function OroMarsExperience() {
                 className="inline-flex items-center gap-[9px] whitespace-nowrap rounded-full border border-oro-sand/[.26] py-2 pl-[11px] pr-[14px] text-[11px] font-normal tracking-[0.02em] text-oro-sand min-[821px]:gap-3 min-[821px]:py-[11px] min-[821px]:pl-[17px] min-[821px]:pr-[21px] min-[821px]:text-[clamp(11.5px,0.92vw,13.5px)] min-[821px]:tracking-[0.05em]"
               >
                 <i className="block h-[5px] w-[5px] shrink-0 animate-[oro-pip_2.6s_ease-in-out_infinite] rounded-full bg-oro-gold" />
-                {/* the legend layout needs the number; the anchored layout does not */}
-                <b className="mr-[11px] hidden text-[9px] font-light tracking-[0.3em] text-oro-sand/35 max-[820px]:portrait:inline">
-                  {String(nj + 1).padStart(2, "0")}
-                </b>
                 {n.title}
               </span>
             </div>
