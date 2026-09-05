@@ -735,10 +735,8 @@ export default function OroMarsExperience() {
                       if (!noteDotRefs.current[si]) noteDotRefs.current[si] = [];
                       noteDotRefs.current[si][nj] = el;
                     }}
-                    r={4}
+                    r={2.5}
                     fill="hsl(var(--oro-gold))"
-                    stroke="hsl(var(--oro-ink)/.9)"
-                    strokeWidth={1.5}
                     style={{ opacity: 0 }}
                   />
                   {/* the number that pairs a marker on the building with its legend row */}
@@ -747,15 +745,16 @@ export default function OroMarsExperience() {
                       if (!noteTagRefs.current[si]) noteTagRefs.current[si] = [];
                       noteTagRefs.current[si][nj] = el;
                     }}
-                    fill="hsl(var(--oro-gold))"
-                    stroke="hsl(var(--oro-ink)/.85)"
-                    strokeWidth={4.5}
+                    fill="hsl(var(--oro-sand)/.8)"
+                    stroke="hsl(var(--oro-ink)/.5)"
+                    strokeWidth={2.5}
                     strokeLinejoin="round"
                     style={{
                       opacity: 0,
                       paintOrder: "stroke",
-                      font: "700 12.5px/1 Sansation, system-ui, sans-serif",
-                      letterSpacing: ".05em",
+                      // the site's own numeral idiom: light, wide-tracked, dim sand
+                      font: "300 9px/1 Sansation, system-ui, sans-serif",
+                      letterSpacing: ".3em",
                     }}
                   >
                     {String(nj + 1).padStart(2, "0")}
@@ -787,7 +786,7 @@ export default function OroMarsExperience() {
               >
                 <i className="block h-[5px] w-[5px] shrink-0 animate-[oro-pip_2.6s_ease-in-out_infinite] rounded-full bg-oro-gold" />
                 {/* the legend layout needs the number; the anchored layout does not */}
-                <b className="mr-[9px] hidden text-[9px] font-normal tracking-[0.1em] text-oro-gold max-[820px]:inline">
+                <b className="mr-[11px] hidden text-[9px] font-light tracking-[0.3em] text-oro-sand/35 max-[820px]:inline">
                   {String(nj + 1).padStart(2, "0")}
                 </b>
                 {n.title}

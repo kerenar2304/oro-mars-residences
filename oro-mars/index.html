@@ -287,9 +287,10 @@
 
   /* numbered marker drawn beside each anchor — only used in the phone legend layout */
   .leads .marker{
-    font-family:var(--body);font-weight:700;font-size:12.5px;letter-spacing:.05em;
-    fill:var(--gold);opacity:0;paint-order:stroke;
-    stroke:rgba(7,5,3,.95);stroke-width:4.5px;stroke-linejoin:round;
+    /* the site's own numeral idiom: light, wide-tracked, dim sand — as in the menu */
+    font-family:var(--body);font-weight:300;font-size:9px;letter-spacing:.3em;
+    fill:rgba(239,227,212,.8);opacity:0;paint-order:stroke;
+    stroke:rgba(7,5,3,.5);stroke-width:2.5px;stroke-linejoin:round;
   }
   .chip.tag .idx{display:none}
 
@@ -297,8 +298,8 @@
     /* the labels move off the building and become a legend, so they carry the number */
     .chip.tag{gap:9px;padding:8px 14px 8px 11px;font-size:11px;letter-spacing:.02em}
     .chip.tag .idx{
-      display:inline;margin-right:9px;font-weight:400;
-      font-size:9px;letter-spacing:.1em;color:var(--gold);
+      display:inline;margin-right:11px;font-weight:300;
+      font-size:9px;letter-spacing:.3em;color:rgba(239,227,212,.35);
     }
   }
   @media (max-width:760px){
@@ -491,10 +492,8 @@
           line.setAttribute('stroke', 'rgba(239,227,212,.8)');
           line.setAttribute('stroke-width', '1');
           dot = document.createElementNS(SVGNS, 'circle');
-          dot.setAttribute('r', '4');
+          dot.setAttribute('r', '2.5');
           dot.setAttribute('fill', '#E3B072');
-          dot.setAttribute('stroke', 'rgba(7,5,3,.9)');
-          dot.setAttribute('stroke-width', '1.5');
           // the number that pairs a marker on the building with its legend row
           tag = document.createElementNS(SVGNS, 'text');
           tag.setAttribute('class', 'marker');
