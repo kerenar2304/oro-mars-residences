@@ -168,6 +168,7 @@ export default function OroMarsExperience() {
   const noteLineRefs = useRef<(SVGPolylineElement | null)[][]>(SECTIONS.map(() => []));
   const noteDotRefs = useRef<(SVGCircleElement | null)[][]>(SECTIONS.map(() => []));
   const noteTagRefs = useRef<(SVGTextElement | null)[][]>(SECTIONS.map(() => []));
+  const notePillRefs = useRef<(SVGRectElement | null)[][]>(SECTIONS.map(() => []));
   const oroRef = useRef<HTMLSpanElement>(null);
   const subRef = useRef<HTMLSpanElement>(null);
 
@@ -335,6 +336,7 @@ export default function OroMarsExperience() {
         const line = noteLineRefs.current[si]?.[nj];
         const dot = noteDotRefs.current[si]?.[nj];
         const tag = noteTagRefs.current[si]?.[nj];
+        const pill = notePillRefs.current[si]?.[nj];
         if (!box) return;
 
         let o = 0;
@@ -356,17 +358,21 @@ export default function OroMarsExperience() {
           box.style.left = `${LEG_X}px`;
           box.style.top = `${LEG_TOP + nj * LEG_ROW}px`;
           if (line) line.style.opacity = "0";
-          if (def.a && dot && tag) {
+          if (def.a && dot && tag && pill) {
             dot.setAttribute("cx", String(ax));
             dot.setAttribute("cy", String(ay));
-            tag.setAttribute("x", String(ax + 9));
-            tag.setAttribute("y", String(ay + 4));
+            pill.setAttribute("x", String(ax + 10));
+            pill.setAttribute("y", String(ay - 9));
+            tag.setAttribute("x", String(ax + 24));
+            tag.setAttribute("y", String(ay + 3.5));
+            pill.style.opacity = String(o);
             tag.style.opacity = String(o);
           }
           return;
         }
 
         if (tag) tag.style.opacity = "0";
+        if (pill) pill.style.opacity = "0";
         const bw = box.offsetWidth;
         const lx = Math.max(12, Math.min(ox + def.l[0] * dw, sw - bw - 12));
         const ly = oy + def.l[1] * dh;
@@ -716,6 +722,13 @@ export default function OroMarsExperience() {
       {/* system annotations — leader lines + spec callouts */}
       <div className="pointer-events-none fixed inset-0 z-20">
         <svg className="absolute inset-0 h-full w-full overflow-visible">
+          {/* the same warm glass as the closing CTA, so the markers belong to the set */}
+          <defs>
+            <linearGradient id="oroGlass" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="rgb(150,72,42)" stopOpacity={0.78} />
+              <stop offset="100%" stopColor="rgb(96,44,26)" stopOpacity={0.66} />
+            </linearGradient>
+          </defs>
           {SECTIONS.map((s, si) =>
             s.notes?.map((n, nj) =>
               n.a ? (
@@ -739,20 +752,32 @@ export default function OroMarsExperience() {
                     fill="hsl(var(--oro-gold))"
                     style={{ opacity: 0 }}
                   />
-                  {/* the number that pairs a marker on the building with its legend row */}
+                  {/* the number that pairs a marker on the building with its legend
+                      row, on a glass pill so it holds against a bright frame */}
+                  <rect
+                    ref={(el) => {
+                      if (!notePillRefs.current[si]) notePillRefs.current[si] = [];
+                      notePillRefs.current[si][nj] = el;
+                    }}
+                    rx={9}
+                    ry={9}
+                    width={30}
+                    height={18}
+                    fill="url(#oroGlass)"
+                    stroke="hsl(var(--oro-gold)/.46)"
+                    strokeWidth={1}
+                    style={{ opacity: 0 }}
+                  />
                   <text
+                    textAnchor="middle"
                     ref={(el) => {
                       if (!noteTagRefs.current[si]) noteTagRefs.current[si] = [];
                       noteTagRefs.current[si][nj] = el;
                     }}
-                    fill="hsl(var(--oro-sand)/.8)"
-                    stroke="hsl(var(--oro-ink)/.5)"
-                    strokeWidth={2.5}
-                    strokeLinejoin="round"
+                    fill="hsl(var(--oro-sand)/.94)"
                     style={{
                       opacity: 0,
-                      paintOrder: "stroke",
-                      // the site's own numeral idiom: light, wide-tracked, dim sand
+                      // the site's own numeral idiom: light, wide-tracked
                       font: "300 9px/1 Sansation, system-ui, sans-serif",
                       letterSpacing: ".3em",
                     }}

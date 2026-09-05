@@ -287,10 +287,13 @@
 
   /* numbered marker drawn beside each anchor — only used in the phone legend layout */
   .leads .marker{
-    /* the site's own numeral idiom: light, wide-tracked, dim sand — as in the menu */
+    /* the site's own numeral idiom: light, wide-tracked — as in the menu */
     font-family:var(--body);font-weight:300;font-size:9px;letter-spacing:.3em;
-    fill:rgba(239,227,212,.8);opacity:0;paint-order:stroke;
-    stroke:rgba(7,5,3,.5);stroke-width:2.5px;stroke-linejoin:round;
+    fill:rgba(239,227,212,.94);opacity:0;
+  }
+  /* the same warm glass as the closing CTA */
+  .leads .marker-pill{
+    fill:url(#oroGlass);stroke:rgba(227,176,114,.46);stroke-width:1;opacity:0;
   }
   .chip.tag .idx{display:none}
 
@@ -481,11 +484,17 @@
       nl.className = 'notelayer';
       var svg = document.createElementNS(SVGNS, 'svg');
       svg.setAttribute('class', 'leads');
+      // the same warm glass as the closing CTA, so the markers belong to the set
+      svg.innerHTML =
+        '<defs><linearGradient id="oroGlass" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0%" stop-color="rgb(150,72,42)" stop-opacity=".78"/>' +
+          '<stop offset="100%" stop-color="rgb(96,44,26)" stop-opacity=".66"/>' +
+        '</linearGradient></defs>';
       nl.appendChild(svg);
 
       noteEls[i] = s.notes.map(function(nt, nj){
         var num = String(nj + 1).padStart(2, '0');
-        var line = null, dot = null, tag = null;
+        var line = null, dot = null, tag = null, pill = null;
         if (nt.a){
           line = document.createElementNS(SVGNS, 'polyline');
           line.setAttribute('fill', 'none');
@@ -494,18 +503,24 @@
           dot = document.createElementNS(SVGNS, 'circle');
           dot.setAttribute('r', '2.5');
           dot.setAttribute('fill', '#E3B072');
-          // the number that pairs a marker on the building with its legend row
+          // the number that pairs a marker on the building with its legend row,
+          // on a glass pill so it holds against a bright frame
+          pill = document.createElementNS(SVGNS, 'rect');
+          pill.setAttribute('class', 'marker-pill');
+          pill.setAttribute('rx', '9'); pill.setAttribute('ry', '9');
+          pill.setAttribute('width', '30'); pill.setAttribute('height', '18');
           tag = document.createElementNS(SVGNS, 'text');
           tag.setAttribute('class', 'marker');
+          tag.setAttribute('text-anchor', 'middle');
           tag.textContent = num;
-          svg.appendChild(line); svg.appendChild(dot); svg.appendChild(tag);
+          svg.appendChild(line); svg.appendChild(pill); svg.appendChild(dot); svg.appendChild(tag);
         }
 
         var box = document.createElement('div');
         box.className = 'note';
         box.innerHTML = '<span class="chip tag"><i class="pip"></i><b class="idx">' + num + '</b>' + nt.title + '</span>';
         nl.appendChild(box);
-        return { box:box, line:line, dot:dot, tag:tag, def:nt };
+        return { box:box, line:line, dot:dot, tag:tag, pill:pill, def:nt };
       });
 
       copyEl.appendChild(nl);
@@ -756,13 +771,16 @@
           if (n.line) n.line.style.opacity = 0;
           if (def.a){
             n.dot.setAttribute('cx', ax); n.dot.setAttribute('cy', ay);
-            n.tag.setAttribute('x', ax + 9); n.tag.setAttribute('y', ay + 4);
+            n.pill.setAttribute('x', ax + 10); n.pill.setAttribute('y', ay - 9);
+            n.tag.setAttribute('x', ax + 24); n.tag.setAttribute('y', ay + 3.5);
+            n.pill.style.opacity = o;
             n.tag.style.opacity = o;
           }
           continue;
         }
 
         if (n.tag) n.tag.style.opacity = 0;
+        if (n.pill) n.pill.style.opacity = 0;
         var bw = n.box.offsetWidth;
         var lx = ox + def.l[0] * dw, ly = oy + def.l[1] * dh;
         lx = Math.max(12, Math.min(lx, sw - bw - 12));
