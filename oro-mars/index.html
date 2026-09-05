@@ -285,9 +285,21 @@
   #bar i{display:block;height:100%;width:0;background:var(--gold);transition:width .3s ease}
   #pct{font-size:9px;letter-spacing:.4em;color:var(--sand-dim)}
 
-  @media (max-width:640px){
-    /* the annotation labels have to share a phone screen with the building */
-    .chip.tag{gap:9px;padding:9px 15px 9px 12px;font-size:11px;letter-spacing:.02em}
+  /* numbered marker drawn beside each anchor — only used in the phone legend layout */
+  .leads .marker{
+    font-family:var(--body);font-weight:400;font-size:10px;letter-spacing:.08em;
+    fill:var(--gold);opacity:0;paint-order:stroke;
+    stroke:rgba(7,5,3,.85);stroke-width:3px;stroke-linejoin:round;
+  }
+  .chip.tag .idx{display:none}
+
+  @media (max-width:820px){
+    /* the labels move off the building and become a legend, so they carry the number */
+    .chip.tag{gap:9px;padding:8px 14px 8px 11px;font-size:11px;letter-spacing:.02em}
+    .chip.tag .idx{
+      display:inline;margin-right:9px;font-weight:400;
+      font-size:9px;letter-spacing:.1em;color:var(--gold);
+    }
   }
   @media (max-width:760px){
     .dots{gap:11px;right:12px}
@@ -469,8 +481,9 @@
       svg.setAttribute('class', 'leads');
       nl.appendChild(svg);
 
-      noteEls[i] = s.notes.map(function(nt){
-        var line = null, dot = null;
+      noteEls[i] = s.notes.map(function(nt, nj){
+        var num = String(nj + 1).padStart(2, '0');
+        var line = null, dot = null, tag = null;
         if (nt.a){
           line = document.createElementNS(SVGNS, 'polyline');
           line.setAttribute('fill', 'none');
@@ -479,14 +492,18 @@
           dot = document.createElementNS(SVGNS, 'circle');
           dot.setAttribute('r', '3');
           dot.setAttribute('fill', '#EFE3D4');
-          svg.appendChild(line); svg.appendChild(dot);
+          // the number that pairs a marker on the building with its legend row
+          tag = document.createElementNS(SVGNS, 'text');
+          tag.setAttribute('class', 'marker');
+          tag.textContent = num;
+          svg.appendChild(line); svg.appendChild(dot); svg.appendChild(tag);
         }
 
         var box = document.createElement('div');
         box.className = 'note';
-        box.innerHTML = '<span class="chip tag"><i class="pip"></i>' + nt.title + '</span>';
+        box.innerHTML = '<span class="chip tag"><i class="pip"></i><b class="idx">' + num + '</b>' + nt.title + '</span>';
         nl.appendChild(box);
-        return { box:box, line:line, dot:dot, def:nt };
+        return { box:box, line:line, dot:dot, tag:tag, def:nt };
       });
 
       copyEl.appendChild(nl);
@@ -707,6 +724,8 @@
       var k = (img && img.naturalWidth) ? Math.max(sw / img.naturalWidth, sh / img.naturalHeight) : 1;
       var dw = img ? img.naturalWidth * k : sw, dh = img ? img.naturalHeight * k : sh;
       var ox = (sw - dw) * focusX, oy = (sh - dh) / 2;
+      var narrow = sw < 820;
+      var LEG_X = 16, LEG_ROW = 38, LEG_TOP = Math.max(96, sh * .12);
 
       for (var nj = 0; nj < list.length; nj++){
         var n = list[nj], def = n.def, o = 0;
@@ -720,15 +739,31 @@
         if (n.dot)  n.dot.style.opacity  = o;
         if (o <= .01) continue;
 
+        var ax = def.a ? ox + def.a[0] * dw : 0;
+        var ay = def.a ? oy + def.a[1] * dh : 0;
+
+        if (narrow){
+          /* A phone has no room for a label beside the building. The markers stay
+             on the systems and carry a number; the labels become a legend. */
+          n.box.style.left = LEG_X + 'px';
+          n.box.style.top  = (LEG_TOP + nj * LEG_ROW) + 'px';
+          if (n.line) n.line.style.opacity = 0;
+          if (def.a){
+            n.dot.setAttribute('cx', ax); n.dot.setAttribute('cy', ay);
+            n.tag.setAttribute('x', ax + 9); n.tag.setAttribute('y', ay + 4);
+            n.tag.style.opacity = o;
+          }
+          continue;
+        }
+
+        if (n.tag) n.tag.style.opacity = 0;
         var bw = n.box.offsetWidth;
         var lx = ox + def.l[0] * dw, ly = oy + def.l[1] * dh;
-        // never let a label run off the edge — on a phone the ideal spot is often outside
         lx = Math.max(12, Math.min(lx, sw - bw - 12));
         n.box.style.left = lx + 'px';
         n.box.style.top  = ly + 'px';
         if (!def.a) continue;
 
-        var ax = ox + def.a[0] * dw, ay = oy + def.a[1] * dh;
         n.dot.setAttribute('cx', ax); n.dot.setAttribute('cy', ay);
         // the leader leaves from whichever edge of the label faces the anchor
         var attach = (ax > lx + bw / 2) ? (lx + bw + 8) : (lx - 8);

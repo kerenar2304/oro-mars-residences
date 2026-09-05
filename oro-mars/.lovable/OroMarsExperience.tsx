@@ -167,6 +167,7 @@ export default function OroMarsExperience() {
   const noteBoxRefs = useRef<(HTMLDivElement | null)[][]>(SECTIONS.map(() => []));
   const noteLineRefs = useRef<(SVGPolylineElement | null)[][]>(SECTIONS.map(() => []));
   const noteDotRefs = useRef<(SVGCircleElement | null)[][]>(SECTIONS.map(() => []));
+  const noteTagRefs = useRef<(SVGTextElement | null)[][]>(SECTIONS.map(() => []));
   const oroRef = useRef<HTMLSpanElement>(null);
   const subRef = useRef<HTMLSpanElement>(null);
 
@@ -317,6 +318,10 @@ export default function OroMarsExperience() {
     const dh = img?.naturalHeight ? img.naturalHeight * k : sh;
     const ox = (sw - dw) * focusX.current;
     const oy = (sh - dh) / 2;
+    const narrow = sw < 820;
+    const LEG_X = 16;
+    const LEG_ROW = 38;
+    const LEG_TOP = Math.max(96, sh * 0.12);
 
     SECTIONS.forEach((sec, si) => {
       if (!sec.notes) return;
@@ -324,6 +329,7 @@ export default function OroMarsExperience() {
         const box = noteBoxRefs.current[si]?.[nj];
         const line = noteLineRefs.current[si]?.[nj];
         const dot = noteDotRefs.current[si]?.[nj];
+        const tag = noteTagRefs.current[si]?.[nj];
         if (!box) return;
 
         let o = 0;
@@ -336,16 +342,33 @@ export default function OroMarsExperience() {
         if (dot) dot.style.opacity = String(o);
         if (o <= 0.01) return;
 
+        const ax = def.a ? ox + def.a[0] * dw : 0;
+        const ay = def.a ? oy + def.a[1] * dh : 0;
+
+        if (narrow) {
+          /* A phone has no room for a label beside the building. The markers stay
+             on the systems and carry a number; the labels become a legend. */
+          box.style.left = `${LEG_X}px`;
+          box.style.top = `${LEG_TOP + nj * LEG_ROW}px`;
+          if (line) line.style.opacity = "0";
+          if (def.a && dot && tag) {
+            dot.setAttribute("cx", String(ax));
+            dot.setAttribute("cy", String(ay));
+            tag.setAttribute("x", String(ax + 9));
+            tag.setAttribute("y", String(ay + 4));
+            tag.style.opacity = String(o);
+          }
+          return;
+        }
+
+        if (tag) tag.style.opacity = "0";
         const bw = box.offsetWidth;
-        // never let a label run off the edge — on a phone the ideal spot is often outside
         const lx = Math.max(12, Math.min(ox + def.l[0] * dw, sw - bw - 12));
         const ly = oy + def.l[1] * dh;
         box.style.left = `${lx}px`;
         box.style.top = `${ly}px`;
         if (!def.a || !line || !dot) return;
 
-        const ax = ox + def.a[0] * dw;
-        const ay = oy + def.a[1] * dh;
         dot.setAttribute("cx", String(ax));
         dot.setAttribute("cy", String(ay));
         // the leader leaves from whichever edge of the label faces the anchor
@@ -711,6 +734,25 @@ export default function OroMarsExperience() {
                     fill="hsl(var(--oro-sand))"
                     style={{ opacity: 0 }}
                   />
+                  {/* the number that pairs a marker on the building with its legend row */}
+                  <text
+                    ref={(el) => {
+                      if (!noteTagRefs.current[si]) noteTagRefs.current[si] = [];
+                      noteTagRefs.current[si][nj] = el;
+                    }}
+                    fill="hsl(var(--oro-gold))"
+                    stroke="hsl(var(--oro-ink)/.85)"
+                    strokeWidth={3}
+                    strokeLinejoin="round"
+                    style={{
+                      opacity: 0,
+                      paintOrder: "stroke",
+                      font: "400 10px/1 Sansation, system-ui, sans-serif",
+                      letterSpacing: ".08em",
+                    }}
+                  >
+                    {String(nj + 1).padStart(2, "0")}
+                  </text>
                 </g>
               ) : null
             )
@@ -734,9 +776,13 @@ export default function OroMarsExperience() {
                   backdropFilter: "blur(12px) saturate(1.15)",
                   boxShadow: "0 10px 34px hsl(var(--oro-ink)/.55), inset 0 1px 0 hsl(var(--oro-sand)/.07)",
                 }}
-                className="inline-flex items-center gap-[9px] whitespace-nowrap rounded-full border border-oro-sand/[.26] py-[9px] pl-3 pr-[15px] text-[11px] font-normal tracking-[0.02em] text-oro-sand sm:gap-3 sm:py-[11px] sm:pl-[17px] sm:pr-[21px] sm:text-[clamp(11.5px,0.92vw,13.5px)] sm:tracking-[0.05em]"
+                className="inline-flex items-center gap-[9px] whitespace-nowrap rounded-full border border-oro-sand/[.26] py-2 pl-[11px] pr-[14px] text-[11px] font-normal tracking-[0.02em] text-oro-sand min-[821px]:gap-3 min-[821px]:py-[11px] min-[821px]:pl-[17px] min-[821px]:pr-[21px] min-[821px]:text-[clamp(11.5px,0.92vw,13.5px)] min-[821px]:tracking-[0.05em]"
               >
                 <i className="block h-[5px] w-[5px] shrink-0 animate-[oro-pip_2.6s_ease-in-out_infinite] rounded-full bg-oro-gold" />
+                {/* the legend layout needs the number; the anchored layout does not */}
+                <b className="mr-[9px] hidden text-[9px] font-normal tracking-[0.1em] text-oro-gold max-[820px]:inline">
+                  {String(nj + 1).padStart(2, "0")}
+                </b>
                 {n.title}
               </span>
             </div>
