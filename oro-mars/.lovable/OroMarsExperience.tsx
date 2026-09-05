@@ -49,6 +49,10 @@ const CDN = "https://cdn.jsdelivr.net/gh/kerenar2304/oro-mars-residences@main/or
  *       "0%, 100%": { boxShadow: "0 0 0 4px hsl(var(--oro-gold)/.16), 0 0 14px hsl(var(--oro-gold)/.6)" },
  *       "50%":      { boxShadow: "0 0 0 9px hsl(var(--oro-gold)/.04), 0 0 22px hsl(var(--oro-gold)/.95)" },
  *     },
+ *     "oro-tilt": {
+ *       "0%, 55%, 100%": { transform: "rotate(0deg)" },
+ *       "72%, 88%":      { transform: "rotate(-90deg)" },
+ *     },
  *   },
  */
 
@@ -99,12 +103,6 @@ const SECTIONS: Section[] = [
     key: "seq04", n: 97, vh: 170, label: "Interiors", nav: "The Great Room",
     ch: "03 · The Great Room",
     cap: "Built for another planet,\nDesigned to feel like home.",
-    words: [
-      { t: [0.16, 0.4], x: "22%", y: "30%", text: "Warm stone" },
-      { t: [0.32, 0.56], x: "70%", y: "22%", text: "Natural textures" },
-      { t: [0.48, 0.72], x: "60%", y: "58%", text: "Quiet architecture" },
-      { t: [0.62, 0.86], x: "30%", y: "66%", text: "Made for living" },
-    ],
   },
   {
     key: "seq05", n: 97, vh: 170, label: "Promenade", nav: "The Promenade",
@@ -185,6 +183,7 @@ export default function OroMarsExperience() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [progress, setProgress] = useState(0);
   const [booted, setBooted] = useState(false);
+  const [hint, setHint] = useState(false);
 
   const bootTarget = useMemo(() => 1 + (SECTIONS[1].n ?? 1), []);
 
@@ -319,7 +318,9 @@ export default function OroMarsExperience() {
     const dh = img?.naturalHeight ? img.naturalHeight * k : sh;
     const ox = (sw - dw) * focusX.current;
     const oy = (sh - dh) / 2;
-    const narrow = sw < 820;
+    // the legend exists because a portrait screen has no horizontal room —
+    // turn the phone and the anchored labels come back on their own
+    const narrow = sw < 820 && sh >= sw;
     const LEG_X = 16;
     const LEG_ROW = 38;
 
@@ -525,6 +526,23 @@ export default function OroMarsExperience() {
       }
     };
 
+    /* the rotate hint: only in portrait on a narrow screen, once, briefly */
+    const portraitPhone = () => window.innerWidth < 820 && window.innerHeight > window.innerWidth;
+    let hintDone = false;
+    let hintTimer = 0;
+    const dropHint = () => {
+      hintDone = true;
+      setHint(false);
+      window.clearTimeout(hintTimer);
+    };
+    const hintShow = window.setTimeout(() => {
+      if (hintDone || !portraitPhone()) return;
+      setHint(true);
+      hintTimer = window.setTimeout(() => setHint(false), 6200);
+    }, 1400);
+    const onOrient = () => window.setTimeout(dropHint, 300);
+    window.addEventListener("orientationchange", onOrient);
+
     if ("scrollRestoration" in history) history.scrollRestoration = "manual";
     layout();
     window.scrollTo(0, 0);
@@ -552,7 +570,10 @@ export default function OroMarsExperience() {
     loadSection(1, () => --bootLeft === 0 && finishBoot());
 
     const onScroll = () => {};
-    const onResize = () => layout();
+    const onResize = () => {
+      layout();
+      if (!portraitPhone()) dropHint();
+    };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setMenuOpen(false);
       if (e.key === "ArrowDown" || e.key === "PageDown") {
@@ -596,6 +617,9 @@ export default function OroMarsExperience() {
 
     return () => {
       window.clearTimeout(guard);
+      window.clearTimeout(hintShow);
+      window.clearTimeout(hintTimer);
+      window.removeEventListener("orientationchange", onOrient);
       window.clearTimeout(fitT1);
       window.clearTimeout(fitT2);
       window.removeEventListener("scroll", onScroll);
@@ -811,7 +835,7 @@ export default function OroMarsExperience() {
               >
                 <i className="block h-[5px] w-[5px] shrink-0 animate-[oro-pip_2.6s_ease-in-out_infinite] rounded-full bg-oro-gold" />
                 {/* the legend layout needs the number; the anchored layout does not */}
-                <b className="mr-[11px] hidden text-[9px] font-light tracking-[0.3em] text-oro-sand/35 max-[820px]:inline">
+                <b className="mr-[11px] hidden text-[9px] font-light tracking-[0.3em] text-oro-sand/35 max-[820px]:portrait:inline">
                   {String(nj + 1).padStart(2, "0")}
                 </b>
                 {n.title}
@@ -936,6 +960,32 @@ export default function OroMarsExperience() {
         <b className="font-light tracking-[0.3em] text-oro-sand">AM 05:47</b>
         <span>ORO, Mars</span>
       </div>
+
+      {/* A hint, never a gate — plenty of people browse with orientation lock on,
+          so this suggests, disappears by itself, and stays gone once dismissed. */}
+      <button
+        onClick={() => setHint(false)}
+        aria-live="polite"
+        style={{
+          background: "hsl(var(--oro-ink)/.55)",
+          backdropFilter: "blur(12px) saturate(1.15)",
+          boxShadow: "0 10px 34px hsl(var(--oro-ink)/.5), inset 0 1px 0 hsl(var(--oro-sand)/.07)",
+        }}
+        className={`fixed bottom-[clamp(74px,11vh,110px)] left-1/2 z-[45] flex -translate-x-1/2 items-center gap-3 whitespace-nowrap rounded-full border border-oro-sand/[.22] py-[11px] pl-4 pr-5 text-[9px] uppercase tracking-[0.3em] text-oro-sand transition-all duration-700 ease-out ${
+          hint ? "translate-y-0 opacity-100" : "pointer-events-none translate-y-2.5 opacity-0"
+        }`}
+      >
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden className="block h-[17px] w-[17px] shrink-0 text-oro-gold">
+          <rect
+            x="8" y="3" width="8" height="14" rx="1.6"
+            stroke="currentColor" strokeWidth={1.2}
+            className="origin-[12px_12px] animate-[oro-tilt_3.2s_ease-in-out_infinite]"
+          />
+          <path d="M4.6 15.4a8 8 0 0 0 14.8 2.4" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" />
+          <path d="M19.8 14.2l-.4 3.9-3.7-1.2" stroke="currentColor" strokeWidth={1.2} strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        Best viewed landscape
+      </button>
 
       {/* scroll cue */}
       <div

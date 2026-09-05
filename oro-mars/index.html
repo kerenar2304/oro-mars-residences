@@ -273,6 +273,27 @@
     opacity:0;pointer-events:none;transition:opacity .26s ease;
   }
 
+  /* a hint, never a gate — plenty of people have orientation lock on */
+  #rotate{
+    position:fixed;left:50%;bottom:clamp(74px,11vh,110px);z-index:45;
+    display:flex;align-items:center;gap:12px;white-space:nowrap;cursor:pointer;
+    padding:11px 20px 11px 16px;border-radius:999px;
+    border:1px solid rgba(239,227,212,.22);
+    background:rgba(7,5,3,.55);backdrop-filter:blur(12px) saturate(1.15);
+    box-shadow:0 10px 34px rgba(7,5,3,.5), inset 0 1px 0 rgba(239,227,212,.07);
+    font-size:9px;letter-spacing:.3em;text-transform:uppercase;color:var(--sand);
+    opacity:0;transform:translate(-50%,10px);
+    transition:opacity .7s ease,transform .8s cubic-bezier(.16,.84,.24,1);
+  }
+  #rotate.on{opacity:1;transform:translate(-50%,0)}
+  #rotate svg{display:block;width:17px;height:17px;flex:0 0 auto;color:var(--gold)}
+  #rotate svg .ph{animation:tilt 3.2s ease-in-out infinite;transform-origin:12px 12px}
+  @keyframes tilt{
+    0%,55%,100%{transform:rotate(0)}
+    72%,88%{transform:rotate(-90deg)}
+  }
+  @media (prefers-reduced-motion:reduce){#rotate svg .ph{animation:none}}
+
   /* ---------- loader ---------- */
   #loader{
     position:fixed;inset:0;z-index:90;background:var(--ink);
@@ -298,13 +319,17 @@
   .chip.tag .idx{display:none}
 
   @media (max-width:820px){
-    /* the labels move off the building and become a legend, so they carry the number */
     .chip.tag{gap:9px;padding:8px 14px 8px 11px;font-size:11px;letter-spacing:.02em}
+  }
+  /* the number belongs to the portrait legend only — turned landscape, the labels
+     sit beside their systems again and there is nothing to pair them with */
+  @media (max-width:820px) and (orientation:portrait){
     .chip.tag .idx{
       display:inline;margin-right:11px;font-weight:300;
       font-size:9px;letter-spacing:.3em;color:rgba(239,227,212,.35);
     }
   }
+
   @media (max-width:760px){
     .dots{gap:11px;right:12px}
     .dot b{display:none}
@@ -338,6 +363,15 @@
   <span>ORO, Mars</span>
 </div>
 <div class="scrollcue" id="cue"><s></s></div>
+
+<div id="rotate" role="status">
+  <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+    <rect class="ph" x="8" y="3" width="8" height="14" rx="1.6" stroke="currentColor" stroke-width="1.2"/>
+    <path d="M4.6 15.4a8 8 0 0 0 14.8 2.4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+    <path d="M19.8 14.2l-.4 3.9-3.7-1.2" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+  </svg>
+  <span>Best viewed landscape</span>
+</div>
 
 <div id="menu">
   <nav id="menu-nav"></nav>
@@ -375,13 +409,7 @@
       ch:'02 · The Threshold',   cap:'The view comes standard<i>Floor to horizon windows.<br>Mars, uninterrupted.</i>' },
 
     { key:'seq04', n:97, vh:170, label:'Interiors', nav:'The Great Room',
-      ch:'03 · The Great Room',  cap:'Built for another planet,<br>Designed to feel like home.',
-      words:[
-        { t:[.16,.40], x:'22%', y:'30%', text:'Warm stone' },
-        { t:[.32,.56], x:'70%', y:'22%', text:'Natural textures' },
-        { t:[.48,.72], x:'60%', y:'58%', text:'Quiet architecture' },
-        { t:[.62,.86], x:'30%', y:'66%', text:'Made for living' }
-      ] },
+      ch:'03 · The Great Room',  cap:'Built for another planet,<br>Designed to feel like home.' },
 
     { key:'seq05', n:97, vh:170, label:'Promenade', nav:'The Promenade',
       ch:'04 · The Promenade',   cap:'A residential landscape,<br>designed for life on Mars.' },
@@ -741,7 +769,9 @@
       var k = (img && img.naturalWidth) ? Math.max(sw / img.naturalWidth, sh / img.naturalHeight) : 1;
       var dw = img ? img.naturalWidth * k : sw, dh = img ? img.naturalHeight * k : sh;
       var ox = (sw - dw) * focusX, oy = (sh - dh) / 2;
-      var narrow = sw < 820;
+      // the legend exists because a portrait screen has no horizontal room —
+      // turn the phone and the anchored labels come back on their own
+      var narrow = sw < 820 && sh >= sw;
       // measured off the real header, so the legend clears the logo at any size
       var LEG_X = 16, LEG_ROW = 38;
       // rows are centred on their y, so add half a row to clear the header properly
@@ -920,6 +950,37 @@
   document.getElementById('brand').addEventListener('click', function(e){
     e.preventDefault(); window.scrollTo({ top:0, behavior:'smooth' });
   });
+
+  /* ---------------- rotate hint ---------------- */
+  /* A suggestion, not a wall: it never blocks, it disappears by itself, and it
+     stays gone once dismissed or once the phone is actually turned. */
+  (function(){
+    var el = document.getElementById('rotate');
+    if (!el) return;
+    var done = false, timer = 0;
+
+    function portraitPhone(){
+      return window.innerWidth < 820 && window.innerHeight > window.innerWidth;
+    }
+    function hide(){
+      done = true;
+      el.classList.remove('on');
+      clearTimeout(timer);
+    }
+    function maybeShow(){
+      if (done) return;
+      if (!portraitPhone()){ hide(); return; }   // already landscape: nothing to suggest
+      el.classList.add('on');
+      timer = setTimeout(function(){ el.classList.remove('on'); }, 6200);
+    }
+
+    el.addEventListener('click', hide);
+    window.addEventListener('orientationchange', function(){ setTimeout(hide, 300); });
+    window.addEventListener('resize', function(){
+      if (!portraitPhone()) hide();
+    });
+    setTimeout(maybeShow, 1400);
+  })();
 
   if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
   layout();
